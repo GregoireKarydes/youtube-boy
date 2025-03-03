@@ -12,7 +12,9 @@ const CONFIG = [{
     category: "league-of-legends",
     lang: "fr",
     skip: false,
-    youtube_channel: '@bestlolfr'
+    skipShort: false,
+    skipCompil: true,
+    youtube_channel: 'Best of lol FR'
 }, {
     category: "sea-of-thieves",
     lang: "fr",
@@ -46,4 +48,8 @@ const CONFIG = [{
     youtube_channel: null
 }];
 
-module.exports = {CONFIG}
+const BLACKLIST_AUTHOR = [
+    'Joueur_du_Grenier'
+]
+
+module.exports = {CONFIG, BLACKLIST_AUTHOR}

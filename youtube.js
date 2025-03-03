@@ -7,12 +7,12 @@ const ffprobePath = require('ffprobe-static').path;
 ffmpeg.setFfmpegPath(ffmpegStatic); // Utilisation de la version statique de FFmpeg
 ffmpeg.setFfprobePath(ffprobePath);
 
-async function uploadShorts(clipUrl, author, authorLink, clipName, lang) {
+async function uploadShorts(clipUrl, author, authorLink, clipName, channel) {
     try {
         const credentials = { email: process.env.YT_EMAIl, pass: process.env.YT_PASSWORD, recoveryemail: 'cartomagie.facile@gmail.com' }
         console.log('Uploading shorts youtube video...');
-        const video2 = { path: clipUrl, title: `${author.toUpperCase()} ${clipName.trim().toUpperCase()}`, description:`Twitch: ${authorLink}`, language: 'english', tags: ['video', 'league of legends'],   skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
-        await upload (credentials, [ video2], {headless:true})
+        const video = { path: clipUrl, title: `${author.toUpperCase()} ${clipName.trim().toUpperCase()}`, description:`Twitch: ${authorLink}`,  channelName: channel,  skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
+        await upload (credentials, [ video], {headless:true})
         console.log('Video short uploaded successfully');
 
     } catch (error) {
@@ -21,12 +21,12 @@ async function uploadShorts(clipUrl, author, authorLink, clipName, lang) {
     }
 }
 
-async function uploadCompilation(clips, folder, title) {
+async function uploadCompilation(clips, folder, title, channel) {
     try {
         const credentials = { email: process.env.YT_EMAIl, pass: process.env.YT_PASSWORD, recoveryemail: 'cartomagie.facile@gmail.com' }
         console.log('Uploading youtube compilation video...');
-        const video2 = { path: `${folder}/compilation.mp4`, title: `BEST OF LOL (FR): ${title}`, thumbnail:`${folder}/compilation.png`, description:`${await generateTimeCodeFromClips(clips)}`, language: 'english', tags: ['video', 'league of legends'],   skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
-        await upload (credentials, [ video2], {headless:false})
+        const video = { path: `${folder}/compilation.mp4`, title: `BEST OF LOL (FR): ${title}`, thumbnail:`${folder}/compilation.png`,channelName: channel, description:`${await generateTimeCodeFromClips(clips)}`, language: 'english', tags: ['video', 'league of legends'],   skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
+        await upload (credentials, [ video], {headless:true})
         console.log('Video compilation uploaded successfully');
 
     } catch (error) {

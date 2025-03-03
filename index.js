@@ -1,13 +1,16 @@
-const config = require('./config').CONFIG
+const config = require('./config')
 const twitch = require('./twitch')
-const downloadClip = require('./download')
+const downloader = require('./download')
 const edit = require('./edit')
 const youtube = require('./youtube')
 const fs = require("fs");
 const thumbnail = require('./thumbnail')
+const cache = require('./cache')
 
 async function start() {
-    for (let conf of config) {
+    const cacheManager = new cache()
+    cacheManager.ensureCache()
+    for (let conf of config.CONFIG) {
         const lang = conf.lang;
         const category = conf.category;
         if (conf.skip) {
@@ -23,6 +26,7 @@ async function start() {
         try {
            const clips = await twitch.getClipsTrendingUrl(lang, category);
            console.log("🔗 Number of links found ", clips.length);
+           console.log("💎 Number of unique clips ", clips.length);
            for (const i in clips) {
             let retryCount = 0;
             const maxRetries = 5;
@@ -37,12 +41,29 @@ async function start() {
                             await sleep(2000);
                         }
                         
-                        const { filepath, metadata } = await downloadClip(clips[i].url, clips[i].lang, clips[i].category, i);
+                        const { filepath } = await downloader.downloadClip(clips[i], clips[i].lang, clips[i].category, i);
                         clips[i].filepath = filepath;
-                        clips[i].metadata = metadata;
                         console.log('Editing in vertical format');
+                        if(conf.skipShort || i < 6) {
+                            console.log(`🚫 Skip shorts for ${category} for ${lang}`)
+                            success = true
+                            continue
+                        }
+                        if(config.BLACKLIST_AUTHOR.includes(clips[i].metadata.creatorUsername)) {
+                            console.log(`🚫 Banned author found ${clips[i].metadata.creatorUsername}`)
+                            fs.unlinkSync(clips[i].filepath);
+                            console.log("🗑️ File deleted : ", clips[i].filepath);
+                            success = true
+                            continue
+                        }
+                        if(cacheManager.textExistsInCache(clips[i].filepath)) {
+                            console.log("File found in cache : ", clips[i].filepath);
+                            success = true
+                            continue
+                        }
                         const verticalPath= await edit.convertToVertical(filepath);
-                        await youtube.uploadShorts(verticalPath, clips[i].metadata.creatorUsername,clips[i].metadata.creatorUrl, clips[i].metadata.clipName);
+                        await youtube.uploadShorts(verticalPath, clips[i].metadata.creatorUsername,clips[i].metadata.creatorUrl, clips[i].metadata.clipName, conf.youtube_channel);
+                        cacheManager.writeToCache(clips[i].filepath)
                         fs.unlinkSync(verticalPath);
                         console.log("🗑️ Vertical file deleted : ", verticalPath);
                         success = true;
@@ -60,10 +81,15 @@ async function start() {
                     }
                 }
             }
-            if(clips.length < 4) {
-                return console.log('Compilation non crée, pas assez de videos', clips.length)
+            if(clips.length < 4 || conf.skipCompil) {
+                return console.log('Compilation non crée', clips.length)
             }
             const folder = `./clips/${lang}/${category}`
+            if(cacheManager.textExistsInCache(`${folder}/${new Date().toISOString().split('T')[0]}`)) {
+                console.log("File found in cache : ", clips[i].filepath);
+                success = true
+                continue
+            }
             await edit.concatVideosFromFolder(folder)
             console.log('Creation de la miniature de compilation..')
             const indexMinia = getIndexOfShortestTitleWithMinLength(clips)      
@@ -74,9 +100,10 @@ async function start() {
                 clips[3].filepath
             ], `${folder}/compilation.png`)
             console.log('Miniature crée')
-            await youtube.uploadCompilation(clips, folder, clips[indexMinia].title.trim().toUpperCase())
-            // fs.unlinkSync(folder);
-            // console.log("🗑️ Dossier supprimé : ", folder);
+            await youtube.uploadCompilation(clips, folder, clips[indexMinia].title.trim().toUpperCase(), conf.youtube_channel)
+            cacheManager.writeToCache(`${folder}/${new Date().toISOString().split('T')[0]}`)
+            fs.unlinkSync(folder);
+            console.log("🗑️ Dossier supprimé : ", folder);
           
         } catch (categoryError) {
             console.error(`❌ Erreur pour la catégorie ${category} et langue ${lang}:`, categoryError);
@@ -102,4 +129,5 @@ function getIndexOfShortestTitleWithMinLength(arr) {
     });
   
     return index;
-  }
+}
+
