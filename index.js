@@ -39,12 +39,12 @@ async function start() {
                         const { filepath, metadata } = await downloadClip(clips[i].url, clips[i].lang, clips[i].category, i);
                         clips[i].filepath = filepath;
                         clips[i].metadata = metadata;
-                        
+                        console.log('Meta', clips[i].metadata)
+                        console.log('Author name:', clips[i].metadata.creatorUserName)
+                        console.log('Author url:', clips[i].metadata.creatorUrl)
                         console.log('Editing in vertical format');
                         const verticalPath= await edit.convertToVertical(filepath);
-                        console.log('Edited in vertical');
-                        
-                        await youtube.uploadClip(verticalPath, metadata.creatorUserName, metadata.clipName);
+                        await youtube.uploadClip(verticalPath, clips[i].metadata.creatorUsername,clips[i].metadata.creatorUrl, clips[i].metadata.clipName);
                         fs.unlinkSync(verticalPath);
                         console.log("🗑️ Vertical file deleted : ", verticalPath);
                         
@@ -63,8 +63,10 @@ async function start() {
                     }
                 }
             }
-
-            await edit.concatVideosFromFolder(`./clips/${lang}/${category}`)
+            const folder = `./clips/${lang}/${category}`
+            await edit.concatVideosFromFolder(folder)
+            fs.unlinkSync(folder);
+            console.log("🗑️ Dossier supprimé : ", folder);
           
         } catch (categoryError) {
             console.error(`❌ Erreur pour la catégorie ${category} et langue ${lang}:`, categoryError);
