@@ -26,9 +26,9 @@ async function convertToVertical(inputPath) {
         .videoCodec('libx264')
         .audioCodec('aac')
         .format('mp4')
-        .size('1080x1920') // Vertical Full HD format
-        .aspect('9:16')
-        .autopad(true, 'black') // Add black bars if necessary
+        // Au lieu d'utiliser autopad, on va recadrer la vidéo
+        .videoFilters('crop=ih*9/16:ih') // Recadre la vidéo en 9:16 en se basant sur la hauteur
+        .size('1080x1920') // Taille finale verticale Full HD
         .on('progress', (progress) => {
           if (progress?.percent) {
             console.log(`Progression : ${progress.percent.toFixed(2)}%`);
@@ -36,9 +36,9 @@ async function convertToVertical(inputPath) {
         })
         .on('end', () => {
           try {
-            fs.renameSync(tempPath, outputPath); // Rename temp file to final output file with -v.mp4 suffix
+            fs.renameSync(tempPath, outputPath);
             console.log(`Conversion terminée : ${outputPath}`);
-            resolve(outputPath); // Return the new output path
+            resolve(outputPath);
           } catch (error) {
             reject(error);
           }
@@ -46,7 +46,7 @@ async function convertToVertical(inputPath) {
         .on('error', (err) => {
           console.error('Erreur :', err);
           if (fs.existsSync(tempPath)) {
-            fs.unlinkSync(tempPath); // Delete temp file in case of error
+            fs.unlinkSync(tempPath);
           }
           reject(err);
         })
