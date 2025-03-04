@@ -25,61 +25,61 @@ async function start() {
         console.log('🎥 Video : ', category);
         try {
            const clips = await twitch.getClipsTrendingUrl(lang, category);
-           console.log("🔗 Number of links found ", clips.length);
            console.log("💎 Number of unique clips ", clips.length);
-           for (const i in clips) {
+           for (const clip of clips) {
             let retryCount = 0;
             const maxRetries = 5;
+            const index = clips.findIndex(c => c.metadata.clipName === clip.metadata.clipName)
             let success = false;
         
-                while (retryCount <= maxRetries && !success) {
+            while (retryCount <= maxRetries && !success) {
                     try {
                         if (retryCount > 0) {
-                            console.log(`Retry attempt ${retryCount} for clip: ${clips[i].url}`);
+                            console.log(`Retry attempt ${retryCount} for clip: ${clip.url}`);
                             await sleep(5000); // Longer wait between retries
                         } else {
                             await sleep(2000);
                         }
                         
-                        const { filepath } = await downloader.downloadClip(clips[i], clips[i].lang, clips[i].category, i);
-                        clips[i].filepath = filepath;
+                        const { filepath } = await downloader.downloadClip(clip, clip.lang, clip.category, index);
+                        clip.filepath = filepath;
                         console.log('Editing in vertical format');
-                        if(conf.skipShort || i < 6) {
+                        if(conf.skipShort) {
                             console.log(`🚫 Skip shorts for ${category} for ${lang}`)
                             success = true
                             continue
                         }
-                        if(config.BLACKLIST_AUTHOR.includes(clips[i].metadata.creatorUsername)) {
-                            console.log(`🚫 Banned author found ${clips[i].metadata.creatorUsername}`)
-                            fs.unlinkSync(clips[i].filepath);
-                            console.log("🗑️ File deleted : ", clips[i].filepath);
+                        if(config.BLACKLIST_AUTHOR.includes(clip.metadata.creatorUsername)) {
+                            console.log(`🚫 Banned author found ${clip.metadata.creatorUsername}`)
+                            fs.unlinkSync(clip.filepath);
+                            console.log("🗑️ File deleted : ", clip.filepath);
                             success = true
                             continue
                         }
-                        if(cacheManager.textExistsInCache(clips[i].filepath)) {
-                            console.log("File found in cache : ", clips[i].filepath);
+                        if(cacheManager.textExistsInCache(clip.filepath)) {
+                            console.log("File found in cache : ", clip.filepath);
                             success = true
                             continue
                         }
                         const verticalPath= await edit.convertToVertical(filepath);
-                        await youtube.uploadShorts(verticalPath, clips[i].metadata.creatorUsername,clips[i].metadata.creatorUrl, clips[i].metadata.clipName, conf.youtube_channel);
-                        cacheManager.writeToCache(clips[i].filepath)
+                        await youtube.uploadShorts(verticalPath, clip.metadata.creatorUsername,clip.metadata.creatorUrl, clip.metadata.clipName, conf.youtube_channel);
+                        cacheManager.writeToCache(clip.filepath)
                         fs.unlinkSync(verticalPath);
                         console.log("🗑️ Vertical file deleted : ", verticalPath);
                         success = true;
-                        console.log(`✅ Successfully processed clip: ${clips[i].url}`);
+                        console.log(`✅ Successfully processed clip: ${clip.url}`);
                         
                     } catch (error) {
                         retryCount++;
                         if (retryCount <= maxRetries) {
-                            console.error(`❌ Error processing clip (attempt ${retryCount}/${maxRetries}): ${clips[i].url}`);
+                            console.error(`❌ Error processing clip (attempt ${retryCount}/${maxRetries}): ${clip.url}`);
                             console.error(error);
                         } else {
-                            console.error(`❌ Failed to process clip after ${maxRetries} attempts: ${clips[i].url}`);
+                            console.error(`❌ Failed to process clip after ${maxRetries} attempts: ${clip.url}`);
                             console.error(error);
                         }
                     }
-                }
+            }
             }
             if(clips.length < 4 || conf.skipCompil) {
                 return console.log('Compilation non crée', clips.length)
@@ -102,7 +102,7 @@ async function start() {
             console.log('Miniature crée')
             await youtube.uploadCompilation(clips, folder, clips[indexMinia].title.trim().toUpperCase(), conf.youtube_channel)
             cacheManager.writeToCache(`${folder}/${new Date().toISOString().split('T')[0]}`)
-            fs.unlinkSync(folder);
+            fs.rmSync(folder);
             console.log("🗑️ Dossier supprimé : ", folder);
           
         } catch (categoryError) {
