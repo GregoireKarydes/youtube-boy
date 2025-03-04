@@ -1,9 +1,9 @@
 const CONFIG = [ {
     category: "league-of-legends",
     lang: "fr",
-    skip: false,
+    skip: true,
     skipShort: true,
-    skipCompil: false,
+    skipCompil: true,
     youtube_channel: 'Best of lol FR'
 },
 {

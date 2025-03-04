@@ -49,14 +49,14 @@ async function start() {
                             continue
                         }
                         if(config.BLACKLIST_AUTHOR.includes(clip.metadata.creatorUsername)) {
-                            console.log(`🚫 Banned author found ${clip.metadata.creatorUsername}`)
+                            console.log(`🚫🔍 Banned author found ${clip.metadata.creatorUsername}`)
                             fs.unlinkSync(clip.filepath);
                             console.log("🗑️ File deleted : ", clip.filepath);
                             success = true
                             continue
                         }
                         if(cacheManager.textExistsInCache(clip.filepath)) {
-                            console.log("File found in cache : ", clip.filepath);
+                            console.log("🔍 File found in cache : ", clip.filepath);
                             success = true
                             continue
                         }
@@ -74,8 +74,7 @@ async function start() {
                         retryCount++;
                         if (retryCount <= maxRetries) {
                             console.error(`❌ Error processing clip (attempt ${retryCount}/${maxRetries}): ${clip.url}`);
-                            console.error(error);
-                            fs.unlinkSync(verticalPath);
+                            console.error(error)
                         } else {
                             console.error(`❌ Failed to process clip after ${maxRetries} attempts: ${clip.url}`);
                             console.error(error);

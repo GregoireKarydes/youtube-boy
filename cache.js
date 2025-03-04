@@ -37,24 +37,29 @@ class CacheManager {
     }
   }
 
-  // Vérifier si un texte existe dans le cache
   textExistsInCache(text) {
     try {
-      // Vérifier si le fichier existe
-      if (!fs.existsSync(this.cachePath)) {
-        return false;
-      }
-      
-      // Lire le contenu du fichier
-      const content = fs.readFileSync(this.cachePath, 'utf8');
-      
-      // Vérifier si le texte existe dans le contenu
-      return content.includes(text);
+        if (!fs.existsSync(this.cachePath)) {
+            return false;
+        }
+
+        const content = fs.readFileSync(this.cachePath, 'utf8');
+        const normalizedText = text.replace(/-order-\d+-/, '-order-').replace(/\\/g, '/'); // Supprime le numéro et corrige les slashes
+
+        const lines = content.split('\n').map(line => line.trim());
+        const normalizedLines = lines
+            .map(line => line.replace(/-order-\d+-/, '-order-').replace(/\\/g, '/')); // Applique les mêmes changements
+
+        return normalizedLines.includes(normalizedText);
     } catch (error) {
-      console.error(`Erreur lors de la lecture du cache: ${error.message}`);
-      return false;
+        console.error(`Erreur lors de la lecture du cache: ${error.message}`);
+        return false;
     }
-  }
+}
+
+
+  
+  
 
   // Lire tout le contenu du cache
   readCache() {
