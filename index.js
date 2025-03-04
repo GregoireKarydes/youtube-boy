@@ -75,6 +75,7 @@ async function start() {
                         if (retryCount <= maxRetries) {
                             console.error(`❌ Error processing clip (attempt ${retryCount}/${maxRetries}): ${clip.url}`);
                             console.error(error);
+                            fs.unlinkSync(verticalPath);
                         } else {
                             console.error(`❌ Failed to process clip after ${maxRetries} attempts: ${clip.url}`);
                             console.error(error);
@@ -82,7 +83,7 @@ async function start() {
                     }
             }
             }
-            if(clips.length < 4 || conf.skipCompil) {
+            if(clips.length < 10 || conf.skipCompil) {
                 return console.log('Compilation non crée', clips.length)
             }
             const folder = `./clips/${lang}/${category}`

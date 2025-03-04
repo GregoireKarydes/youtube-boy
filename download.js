@@ -14,28 +14,44 @@ async function getClipMetaData(clipUrl) {
     }
 }
 
+
 async function downloadClip(clip, lang, category, index) {
-    console.log("📥 Téléchargement du clip...");
+    console.log("📥 Téléchargement du clip...", clip.metadata.clipUrl);
 
     const dirPath = path.join(__dirname, 'clips', lang, category);
     fs.mkdirSync(dirPath, { recursive: true });
 
-    const response = await axios({
-        url: clip.url,
-        method: 'GET',
-        responseType: 'stream'
-    });
+    try {
+        const response = await axios({
+            url: clip.metadata.clipUrl,
+            method: 'GET',
+            responseType: 'stream'
+        });
 
-    const date = new Date().toISOString().split('T')[0];
-    const cleanClipName = clip.metadata.clipName.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-');
-    const fileName = `${date}-order-${index}-${clip.metadata.creatorUsername}-${cleanClipName}.mp4`;
-    const filePath = path.join(dirPath, fileName);
+        if (response.status !== 200) {
+            throw new Error(`Erreur lors du téléchargement : ${response.status}`);
+        }
 
-    // Pipe the response stream into the file
-    await response.data.pipe(fs.createWriteStream(filePath));
+        const date = new Date().toISOString().split('T')[0];
+        const cleanClipName = clip.metadata.clipName.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-');
+        const fileName = `${date}-order-${index}-${clip.metadata.creatorUsername}-${cleanClipName}.mp4`;
+        const filePath = path.join(dirPath, fileName);
 
-    console.log(`✅ Clip téléchargé : ${filePath}`);
-    return { filepath: filePath };
+        // Créez un stream d'écriture et gérez les erreurs
+        const writer = fs.createWriteStream(filePath);
+        response.data.pipe(writer);
+
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+
+        console.log(`✅ Clip téléchargé : ${filePath}`);
+        return { filepath: filePath };
+    } catch (error) {
+        console.error('❌ Erreur lors du téléchargement du clip:', error);
+        throw error;
+    }
 }
 
 module.exports = {downloadClip, getClipMetaData};

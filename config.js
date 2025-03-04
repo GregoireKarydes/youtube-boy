@@ -12,8 +12,8 @@ const CONFIG = [{
     category: "league-of-legends",
     lang: "fr",
     skip: false,
-    skipShort: false,
-    skipCompil: true,
+    skipShort: true,
+    skipCompil: false,
     youtube_channel: 'Best of lol FR'
 }, {
     category: "sea-of-thieves",

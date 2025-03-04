@@ -12,7 +12,7 @@ async function uploadShorts(clipUrl, author, authorLink, clipName, channel) {
         const credentials = { email: process.env.YT_EMAIl, pass: process.env.YT_PASSWORD, recoveryemail: 'cartomagie.facile@gmail.com' }
         console.log('Uploading shorts youtube video...');
         const video = { path: clipUrl, title: `${author.toUpperCase()} ${clipName.trim().toUpperCase()}`, description:`Twitch: ${authorLink}`,  channelName: channel,  skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
-        await upload (credentials, [ video], {headless:true})
+        await upload (credentials, [ video], {headless:false})
         console.log('Video short uploaded successfully');
 
     } catch (error) {
