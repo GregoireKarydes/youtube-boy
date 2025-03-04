@@ -43,7 +43,6 @@ async function start() {
                         
                         const { filepath } = await downloader.downloadClip(clip, clip.lang, clip.category, index);
                         clip.filepath = filepath;
-                        console.log('Editing in vertical format');
                         if(conf.skipShort) {
                             console.log(`🚫 Skip shorts for ${category} for ${lang}`)
                             success = true
@@ -61,7 +60,9 @@ async function start() {
                             success = true
                             continue
                         }
-                        const verticalPath= await edit.convertToVertical(filepath);
+                        console.log('Editing in vertical format');
+                        const verticalPath= await edit.convertToVertical(clip.filepath);
+                        console.log('✅ Edited in vertical format');
                         await youtube.uploadShorts(verticalPath, clip.metadata.creatorUsername,clip.metadata.creatorUrl, clip.metadata.clipName, conf.youtube_channel);
                         cacheManager.writeToCache(clip.filepath)
                         fs.unlinkSync(verticalPath);
