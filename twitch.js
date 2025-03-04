@@ -1,4 +1,4 @@
-const LIMIT_CLIPS = 2;
+const LIMIT_CLIPS = 20;
 const TWITCH_BASE_URL = 'https://www.twitch.tv';
 const puppeteer = require('puppeteer');
 const downloader = require('./download')

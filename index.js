@@ -87,7 +87,7 @@ async function start() {
             }
             const folder = `./clips/${lang}/${category}`
             if(cacheManager.textExistsInCache(`${folder}/${new Date().toISOString().split('T')[0]}`)) {
-                console.log("File found in cache : ", clips[i].filepath);
+                console.log("🔍 File found in cache : ", clips[i].filepath);
                 success = true
                 continue
             }
