@@ -25,7 +25,7 @@ async function uploadCompilation(clips, folder, title, channel) {
     try {
         const credentials = { email: process.env.YT_EMAIl, pass: process.env.YT_PASSWORD, recoveryemail: 'cartomagie.facile@gmail.com' }
         console.log('Uploading youtube compilation video...');
-        const video = { path: `${folder}/compilation.mp4`, title: `BEST OF LOL (FR): ${title}`, thumbnail:`${folder}/compilation.png`,channelName: channel, description:`${await generateTimeCodeFromClips(clips)}`, language: 'english', tags: ['video', 'league of legends'],   skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
+        const video = { path: `${folder}/compilation.mp4`, title: `BEST OF LOL: ${title}`, thumbnail:`${folder}/compilation.png`,channelName: channel, description:`${await generateTimeCodeFromClips(clips)}`, language: 'english', tags: ['video', 'league of legends'],   skipProcessingWait: true, onProgress: (progress) => { console.log('progress', progress) }, uploadAsDraft: false, isAgeRestriction: false, isNotForKid: false, publishType: 'PUBLIC', isChannelMonetized: false }
         await upload (credentials, [ video], {headless:true})
         console.log('Video compilation uploaded successfully');
 
