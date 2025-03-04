@@ -11,7 +11,7 @@ async function getClipsTrendingUrl(lang, category, maxRetries = 3, minUniqueClip
     while (retries < maxRetries) {
         try {
             browser = await puppeteer.launch({ 
-                headless: false, 
+                headless: true, 
                 args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process'] 
             });
             const page = await browser.newPage();
@@ -50,7 +50,7 @@ async function getClipsTrendingUrl(lang, category, maxRetries = 3, minUniqueClip
             
             let processedUrls = new Set(); // Pour suivre les URLs déjà traitées
             let scrollAttempts = 0;
-            const maxScrollAttempts = 15; // Augmenté pour donner plus de chances
+            const maxScrollAttempts = 1; // Augmenté pour donner plus de chances
             
             // Boucle de scrolling jusqu'à obtenir assez de clips uniques ou atteindre la limite de tentatives
             while (uniqueClipsMap.size < minUniqueClips && scrollAttempts < maxScrollAttempts) {
@@ -75,16 +75,8 @@ async function getClipsTrendingUrl(lang, category, maxRetries = 3, minUniqueClip
                         continue;
                     }
                     
-                    // Vérifier si c'est un doublon
-                    const dateClip = new Date(metadata.clippedOn);
-                    let estDoublon = false;
-                    
-                    
-                    // Logique de crosscorelation basé sur le son ou sur l'image pour verifier si ça peut etre des doublons ou pas 
 
-
-                    if (!estDoublon) {
-                        const cle = `${metadata.creatorUsername}_${dateClip.getTime()}`;
+                        const cle = `${metadata.creatorUsername}_${metadata.clipName}`;
                         const clipComplet = {
                             url: fullUrl,
                             title: clip.title,
@@ -97,7 +89,7 @@ async function getClipsTrendingUrl(lang, category, maxRetries = 3, minUniqueClip
                         
                         uniqueClipsMap.set(cle, clipComplet);
                         console.log(`🔗 Nouveau clip unique ajouté: ${fullUrl} (${uniqueClipsMap.size}/${minUniqueClips})`);
-                    }
+                    
                     
                     // Si nous avons suffisamment de clips uniques, sortir de la boucle
                     if (uniqueClipsMap.size >= minUniqueClips) {

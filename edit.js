@@ -5,54 +5,49 @@ const ffmpegStatic = require('ffmpeg-static');
 
 ffmpeg.setFfmpegPath(ffmpegStatic); // Utilisation de la version statique de FFmpeg
 
-/**
- * Convertit une vidéo en format vertical et écrase le fichier d'origine.
- * @param {string} inputPath - Chemin de la vidéo à convertir.
- * @returns {Promise<void>} - Une promesse qui se résout lorsque la conversion est terminée.
- */
 async function convertToVertical(inputPath) {
-    await sleep(3000);
-    
-    if (!fs.existsSync(inputPath)) {
-      throw new Error(`Erreur : Le fichier "${inputPath}" n'existe pas.`);
-    }
+  await sleep(3000);
   
-    // Create output path with -v.mp4 suffix
-    const outputPath = inputPath.replace('.mp4', '-v.mp4');
-    const tempPath = `${outputPath}.temp.mp4`; // Temporary file
-  
-    return new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .videoCodec('libx264')
-        .audioCodec('aac')
-        .format('mp4')
-        // Au lieu d'utiliser autopad, on va recadrer la vidéo
-        .videoFilters('crop=ih*9/16:ih') // Recadre la vidéo en 9:16 en se basant sur la hauteur
-        .size('1080x1920') // Taille finale verticale Full HD
-        .on('progress', (progress) => {
-          if (progress?.percent) {
-            console.log(`Progression : ${progress.percent.toFixed(2)}%`);
-          }
-        })
-        .on('end', () => {
-          try {
-            fs.renameSync(tempPath, outputPath);
-            console.log(`Conversion terminée : ${outputPath}`);
-            resolve(outputPath);
-          } catch (error) {
-            reject(error);
-          }
-        })
-        .on('error', (err) => {
-          console.error('Erreur :', err);
-          if (fs.existsSync(tempPath)) {
-            fs.unlinkSync(tempPath);
-          }
-          reject(err);
-        })
-        .save(tempPath);
-    });
+  if (!fs.existsSync(inputPath)) {
+    throw new Error(`Erreur : Le fichier "${inputPath}" n'existe pas.`);
   }
+
+  // Create output path with -v.mp4 suffix
+  const outputPath = inputPath.replace('.mp4', '-v.mp4');
+  const tempPath = `${outputPath}.temp.mp4`; // Temporary file
+
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .videoCodec('libx264')
+      .audioCodec('aac')
+      .format('mp4')
+      .size('1080x1920') // Vertical Full HD format
+      .aspect('9:16')
+      .autopad(true, 'black') // Add black bars if necessary
+      .on('progress', (progress) => {
+        if (progress?.percent) {
+          console.log(`Progression : ${progress.percent.toFixed(2)}%`);
+        }
+      })
+      .on('end', () => {
+        try {
+          fs.renameSync(tempPath, outputPath); // Rename temp file to final output file with -v.mp4 suffix
+          console.log(`Conversion terminée : ${outputPath}`);
+          resolve(outputPath); // Return the new output path
+        } catch (error) {
+          reject(error);
+        }
+      })
+      .on('error', (err) => {
+        console.error('Erreur :', err);
+        if (fs.existsSync(tempPath)) {
+          fs.unlinkSync(tempPath); // Delete temp file in case of error
+        }
+        reject(err);
+      })
+      .save(tempPath);
+  });
+}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
